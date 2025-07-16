@@ -1,0 +1,171 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+model ShopDetails {
+  id                 Int              @id @default(autoincrement())
+  shopName           String           @map("shop_name")
+  shortName          String?          @map("short_name")
+  mobileNumber       String           @map("mobile_number") @unique 
+  email              String?
+  address            String
+  subscriptionStatus Boolean          @map("subscription_status")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt      @map("updated_at")
+  deletedAt          DateTime?        @map("deleted_at")
+  owners             Owner[]
+  shopLogos          ShopLogo[]
+  roles              Role[]
+  customerDetails    CustomerDetails[]
+  customerLogos      CustomerLogo[]
+  salesDetails       SalesDetails[]
+  boxCollections     BoxCollection[]
+
+  @@map("Shop_Details")
+}
+
+model Owner {
+  id           Int         @id @default(autoincrement())
+  shopId       Int         @map("shop_id")
+  name         String
+  mobileNumber String      @map("mobile_number") @unique 
+  email        String?     @unique
+  password     String
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt      @map("updated_at")
+  deletedAt    DateTime?   @map("deleted_at")
+  shop         ShopDetails @relation(fields: [shopId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("Owners")
+}
+
+model ShopLogo {
+  id        Int         @id @default(autoincrement())
+  shopId    Int         @map("shop_id")
+  fileName  String      @map("file_name")
+  filePath  String      @map("file_path")
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt      @map("updated_at")
+  deletedAt DateTime?   @map("deleted_at")
+  shop      ShopDetails @relation(fields: [shopId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("Shop_logo")
+}
+
+model Role {
+  id           Int           @id @default(autoincrement())
+  shopId       Int           @map("shop_id")
+  name         String
+  mobileNumber String        @map("mobile_number") @unique 
+  email        String?       @unique
+  roleName     String        @map("role_name")
+  access       String        
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt      @map("updated_at")
+  deletedAt    DateTime?     @map("deleted_at")
+  shop             ShopDetails       @relation(fields: [shopId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  customerDetails  CustomerDetails[]
+  customerLogos    CustomerLogo[]
+  salesDetails     SalesDetails[]
+  boxCollections   BoxCollection[]
+
+  @@map("Roles")
+}
+
+model CustomerDetails {
+  id                     Int            @id @default(autoincrement())
+  roleId                 Int            @map("role_id")
+  shopId                 Int            @map("shop_id")
+  name                   String
+  mobileNumber           String         @map("mobile_number") @unique 
+  email                  String?        @unique
+  totalBoxes             Int?           @map("total_boxes")
+  totalAmount            BigInt?        @map("total_amount")
+  totalDiscountAmount    BigInt?        @map("total_discount_amount")
+  settledBoxes           Int?           @map("settled_boxes")
+  remainingBoxes         Int?           @map("remaining_boxes")
+  settledAmount          BigInt?        @map("settled_amount")
+  remainingAmount        BigInt?        @map("remaining_amount")
+  minAmountForOneBox     String?        @map("min_amount_for_one_box")
+  maxAmountForOneBox     String?        @map("max_amount_for_one_box")
+  averageAmountOneBox    String?        @map("average_amount_one_box")
+  minDisForOneBox        String ?       @map("min_dis_for_one_box")
+  maxDisForOneBox        String?        @map("max_dis_for_one_box")
+  averageDisOneBox       String?        @map("average_dis_one_box")
+  createdAt              DateTime      @default(now()) @map("created_at")
+  updatedAt              DateTime      @updatedAt      @map("updated_at")
+  deletedAt              DateTime?     @map("deleted_at")
+
+  role        Role        @relation(fields: [roleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  shop        ShopDetails @relation(fields: [shopId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  customerLogos  CustomerLogo[]
+  salesDetails   SalesDetails[]
+  boxCollections BoxCollection[]
+
+  @@map("Customer_details")
+}
+
+model CustomerLogo {
+  id         Int            @id @default(autoincrement())
+  roleId     Int            @map("role_id")
+  shopId     Int            @map("shop_id")
+  customerId Int            @map("customer_id")
+  fileName   String         @map("file_name")
+  filePath   String         @map("file_path")
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt      @map("updated_at")
+  deletedAt  DateTime?      @map("deleted_at")
+  role       Role           @relation(fields: [roleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  shop       ShopDetails    @relation(fields: [shopId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  customer   CustomerDetails@relation(fields: [customerId], references: [id],  onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("Customer_logo")
+}
+
+model SalesDetails {
+  id          Int            @id @default(autoincrement())
+  roleId      Int            @map("role_id")
+  shopId      Int            @map("shop_id")
+  customerId  Int            @map("customer_id")
+  soldBoxes   Int            @map("sold_boxes")
+  soldAmount  BigInt         @map("sold_amount")
+  appliedDis  Int            @map("applied_dis")
+  totalAmount BigInt         @map("total_amount")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt      @map("updated_at")
+  deletedAt   DateTime?      @map("deleted_at")
+  role       Role            @relation(fields: [roleId], references: [id],onDelete: Cascade, onUpdate: Cascade)
+  shop       ShopDetails     @relation(fields: [shopId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  customer   CustomerDetails @relation(fields: [customerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("Sales_details")
+}
+
+model BoxCollection {
+  id             Int            @id @default(autoincrement())
+  roleId         Int            @map("role_id")
+  shopId         Int            @map("shop_id")
+  customerId     Int            @map("customer_id")
+  collectedBoxes Int            @map("collected_boxes")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt      @map("updated_at")
+  deletedAt      DateTime?      @map("deleted_at")
+  role       Role            @relation(fields: [roleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  shop       ShopDetails     @relation(fields: [shopId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  customer   CustomerDetails @relation(fields: [customerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("Box_collection")
+}
